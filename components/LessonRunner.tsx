@@ -177,16 +177,21 @@ function StudyScreen({
       <ul className="study-list">
         {vocab.map((item) => (
           <li key={item.id} className="study-card">
-            <span className="study-card-id">{item.indonesian}</span>
-            <span className="study-card-arrow">→</span>
-            <button
-              className="study-card-speak"
-              onClick={() => speak(item.krama)}
-              aria-label={`Dengarkan ${item.krama}`}
-            >
-              🔊
-            </button>
-            <span className="study-card-krama">{item.krama}</span>
+            <div className="study-card-row">
+              <span className="study-card-id">{item.indonesian}</span>
+              <span className="study-card-arrow">→</span>
+              <span className="study-card-krama-group">
+                <span className="study-card-krama">{item.krama}</span>
+                <button
+                  className="study-card-speak"
+                  onClick={() => speak(item.krama)}
+                  aria-label={`Dengarkan ${item.krama}`}
+                >
+                  🔊
+                </button>
+              </span>
+            </div>
+            {item.context && <p className="study-card-context">{item.context}</p>}
           </li>
         ))}
       </ul>
@@ -297,6 +302,9 @@ function ListenExerciseView({
           <p className={isCorrect ? "feedback-correct" : "feedback-wrong"}>
             {isCorrect ? t("feedbackCorrect") : t("feedbackWrong")}
           </p>
+          {!isCorrect && exercise.context && (
+            <p className="feedback-context">{exercise.context}</p>
+          )}
           {isCorrect && (
             <button className="btn btn-primary" onClick={onNext}>
               {t("continueButton")}

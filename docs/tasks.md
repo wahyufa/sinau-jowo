@@ -58,6 +58,21 @@ Found while testing the new features: **every lesson always showed a 100% score,
 **Rule for future work**: never wrap a non-deterministic function (`Math.random`, `Date.now`, etc.) in `useMemo` for anything correctness-critical — use `useState(() => ...)` instead. `useMemo` is a performance hint only.
 Verified after the fix: a lesson answered 9/10 correctly now shows exactly 90% (not 100%), confirmed via direct DOM/network inspection across multiple isolated repro runs.
 
+## Done (learning-science pass: usage context)
+Researched SLA/pedagogy best practices before building (see chat) — key finding: honorifics are a *social rule system* (who-to-whom), not vocabulary, and Duolingo-style bare word-pairs don't teach that. Built the cheapest high-impact fix from that research:
+- [x] `VocabItem.context` field added to `lib/curriculum.ts` — a short note on *when/to whom* each word is used, mostly shared per-unit (e.g. all `kriya-padinan` verbs: "untuk kegiatan orang yang dihormati, bukan diri sendiri"), with per-word overrides where it genuinely differs (pronouns each explained individually; "Dalem" vs "Griya" distinguished)
+- [x] Study screen shows the context note under each vocab card
+- [x] Wrong answers show the context note alongside "coba lagi" (mirrors Duolingo's own proven "Explain My Answer" fix) — wired through `ChoiceExercise`/`ListenExercise` types, so review mode gets this automatically too since it reuses `ChoiceExerciseView`
+- **Also fixed in passing**: caught a mistake where "Sanga" had been overwritten to "Songo" (the *pronunciation* respelling) in the actual displayed curriculum data — reverted to "Sanga"; the phonetic respelling only belongs in `scripts/regenerate-audio.mjs`'s TTS-input map, never in the displayed word.
+- Context notes are Indonesian-only by design (they're explanatory, not app-chrome), so no bilingual toggle needed there.
+- **Not yet built** from the research (deferred, higher effort): scenario/DCT-style production exercises, typed/constructed-response answers instead of tap-select.
+
+## Done (perceived-performance: loading states)
+User reported navigation (clicking ✕ to exit a lesson, or opening a lesson) feels laggy on Vercel — the underlying cause is real latency (proxy.ts calls Supabase on every navigation to refresh the session; /learn does several Supabase queries), which is inherent to keeping sessions secure and not something to strip out. Fixed the *perceived* lag instead, the correct fix for this:
+- [x] `app/learn/loading.tsx`, `app/lesson/[lessonId]/loading.tsx`, `app/review/loading.tsx` — Next.js's built-in per-route Suspense loading UI, shown automatically during both server navigation and client-side `router.push`
+- [x] `.loading-spinner` CSS (simple spinning ring, matches theme colors, works in light/dark)
+- [x] Also swapped the blank placeholder divs in `LessonLoader.tsx`/`ReviewLoader.tsx` (client-side `dynamic(..., { ssr: false })` fallbacks, for the lesson/review runner code-split chunk) to use the same spinner — those were rendering nothing visible before
+
 ## Still needs you
 - [ ] **Re-listen to the 7 regenerated words**, especially Ngunjuk/Bapak/Tindak/Putri/"Sugeng siang" — describe *which syllable* sounds wrong and *what it sounds like instead* if still off, so fixes aren't guesswork
 - [ ] Keep QA-ing the rest of the 72 words by ear in the app

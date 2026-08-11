@@ -7,6 +7,7 @@ export type ChoiceExercise = {
   options: string[];
   correctIndex: number;
   vocabId: string;
+  context: string;
 };
 
 export type MatchExercise = {
@@ -20,6 +21,7 @@ export type ListenExercise = {
   options: string[];
   correctIndex: number;
   vocabId: string;
+  context: string;
 };
 
 export type Exercise = ChoiceExercise | MatchExercise | ListenExercise;
@@ -52,6 +54,7 @@ function buildChoiceExercise(
     options: optionValues,
     correctIndex: optionValues.indexOf(correctAnswer),
     vocabId: target.id,
+    context: target.context,
   };
 }
 
@@ -65,6 +68,7 @@ function buildListenExercise(target: VocabItem, pool: VocabItem[]): ListenExerci
     options: optionValues,
     correctIndex: optionValues.indexOf(target.indonesian),
     vocabId: target.id,
+    context: target.context,
   };
 }
 

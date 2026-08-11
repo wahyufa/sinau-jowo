@@ -5,7 +5,11 @@ import type { VocabItem } from "@/lib/curriculum";
 
 const ReviewRunner = dynamic(() => import("@/components/ReviewRunner"), {
   ssr: false,
-  loading: () => <div className="lesson-page lesson-loading" />,
+  loading: () => (
+    <div className="lesson-page">
+      <div className="loading-spinner" />
+    </div>
+  ),
 });
 
 export default function ReviewLoader({

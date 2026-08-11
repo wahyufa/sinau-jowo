@@ -90,6 +90,9 @@ export default function ChoiceExerciseView({
           <p className={isCorrect ? "feedback-correct" : "feedback-wrong"}>
             {isCorrect ? t("feedbackCorrect") : t("feedbackWrong")}
           </p>
+          {!isCorrect && exercise.context && (
+            <p className="feedback-context">{exercise.context}</p>
+          )}
           {isCorrect && (
             <button className="btn btn-primary" onClick={onNext}>
               {t("continueButton")}

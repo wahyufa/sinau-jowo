@@ -5,7 +5,11 @@ import type { Unit, Lesson } from "@/lib/curriculum";
 
 const LessonRunner = dynamic(() => import("@/components/LessonRunner"), {
   ssr: false,
-  loading: () => <div className="lesson-page lesson-loading" />,
+  loading: () => (
+    <div className="lesson-page">
+      <div className="loading-spinner" />
+    </div>
+  ),
 });
 
 export default function LessonLoader({ unit, lesson }: { unit: Unit; lesson: Lesson }) {
