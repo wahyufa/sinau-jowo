@@ -21,12 +21,21 @@ export type Unit = {
   lessons: Lesson[];
 };
 
-function vocab(unitId: string, items: [string, string][]): VocabItem[] {
-  return items.map(([indonesian, krama], i) => ({
-    id: `${unitId}-${i}`,
-    indonesian,
-    krama,
-  }));
+function lesson(
+  unitId: string,
+  lessonNum: number,
+  title: string,
+  items: [string, string][],
+): Lesson {
+  return {
+    id: `${unitId}-l${lessonNum}`,
+    title,
+    vocab: items.map(([indonesian, krama], i) => ({
+      id: `${unitId}-l${lessonNum}-${i}`,
+      indonesian,
+      krama,
+    })),
+  };
 }
 
 export const CURRICULUM: Unit[] = [
@@ -36,21 +45,19 @@ export const CURRICULUM: Unit[] = [
     description: "Ucapan sehari-hari untuk menyapa dan berpamitan",
     icon: "👋",
     lessons: [
-      {
-        id: "sapaan",
-        title: "Sapaan Dasar",
-        vocab: vocab("sapaan", [
-          ["Selamat pagi", "Sugeng enjing"],
-          ["Selamat siang", "Sugeng siang"],
-          ["Selamat sore", "Sugeng sonten"],
-          ["Selamat malam", "Sugeng dalu"],
-          ["Apa kabar?", "Pripun kabaripun?"],
-          ["Terima kasih", "Matur nuwun"],
-          ["Sama-sama", "Sami-sami"],
-          ["Permisi/maaf", "Nuwun sewu"],
-          ["Sampai jumpa lagi", "Sugeng pepanggihan malih"],
-        ]),
-      },
+      lesson("sapaan", 1, "Bagian 1", [
+        ["Selamat pagi", "Sugeng enjing"],
+        ["Selamat siang", "Sugeng siang"],
+        ["Selamat sore", "Sugeng sonten"],
+        ["Selamat malam", "Sugeng dalu"],
+        ["Apa kabar?", "Pripun kabaripun?"],
+      ]),
+      lesson("sapaan", 2, "Bagian 2", [
+        ["Terima kasih", "Matur nuwun"],
+        ["Sama-sama", "Sami-sami"],
+        ["Permisi/maaf", "Nuwun sewu"],
+        ["Sampai jumpa lagi", "Sugeng pepanggihan malih"],
+      ]),
     ],
   },
   {
@@ -59,19 +66,17 @@ export const CURRICULUM: Unit[] = [
     description: "Kata ganti orang yang sopan",
     icon: "🙋",
     lessons: [
-      {
-        id: "ganti-wong",
-        title: "Kata Ganti Orang",
-        vocab: vocab("ganti-wong", [
-          ["Saya", "Kula"],
-          ["Kamu/Anda", "Panjenengan"],
-          ["Dia", "Piyambakipun"],
-          ["Kita/kami", "Kula sedaya"],
-          ["Mereka", "Piyambakipun sedaya"],
-          ["Nama saya", "Nama kula"],
-          ["Nama Anda", "Asma panjenengan"],
-        ]),
-      },
+      lesson("ganti-wong", 1, "Bagian 1", [
+        ["Saya", "Kula"],
+        ["Kamu/Anda", "Panjenengan"],
+        ["Dia", "Piyambakipun"],
+        ["Kita/kami", "Kula sedaya"],
+      ]),
+      lesson("ganti-wong", 2, "Bagian 2", [
+        ["Mereka", "Piyambakipun sedaya"],
+        ["Nama saya", "Nama kula"],
+        ["Nama Anda", "Asma panjenengan"],
+      ]),
     ],
   },
   {
@@ -80,21 +85,19 @@ export const CURRICULUM: Unit[] = [
     description: "Sebutan untuk anggota keluarga",
     icon: "👪",
     lessons: [
-      {
-        id: "kulawarga",
-        title: "Keluarga",
-        vocab: vocab("kulawarga", [
-          ["Ayah", "Bapak"],
-          ["Ibu", "Ibu"],
-          ["Anak laki-laki", "Putra"],
-          ["Anak perempuan", "Putri"],
-          ["Saudara", "Sedherek"],
-          ["Suami", "Garwa kakung"],
-          ["Istri", "Garwa putri"],
-          ["Kakek", "Eyang kakung"],
-          ["Nenek", "Eyang putri"],
-        ]),
-      },
+      lesson("kulawarga", 1, "Bagian 1", [
+        ["Ayah", "Bapak"],
+        ["Ibu", "Ibu"],
+        ["Anak laki-laki", "Putra"],
+        ["Anak perempuan", "Putri"],
+        ["Saudara", "Sedherek"],
+      ]),
+      lesson("kulawarga", 2, "Bagian 2", [
+        ["Suami", "Garwa kakung"],
+        ["Istri", "Garwa putri"],
+        ["Kakek", "Eyang kakung"],
+        ["Nenek", "Eyang putri"],
+      ]),
     ],
   },
   {
@@ -103,22 +106,20 @@ export const CURRICULUM: Unit[] = [
     description: "Berhitung dengan halus",
     icon: "🔢",
     lessons: [
-      {
-        id: "angka",
-        title: "Angka 1-10",
-        vocab: vocab("angka", [
-          ["Satu", "Setunggal"],
-          ["Dua", "Kalih"],
-          ["Tiga", "Tigo"],
-          ["Empat", "Sekawan"],
-          ["Lima", "Gangsal"],
-          ["Enam", "Enem"],
-          ["Tujuh", "Pitu"],
-          ["Delapan", "Wolu"],
-          ["Sembilan", "Sanga"],
-          ["Sepuluh", "Sedasa"],
-        ]),
-      },
+      lesson("angka", 1, "Angka 1-5", [
+        ["Satu", "Setunggal"],
+        ["Dua", "Kalih"],
+        ["Tiga", "Tigo"],
+        ["Empat", "Sekawan"],
+        ["Lima", "Gangsal"],
+      ]),
+      lesson("angka", 2, "Angka 6-10", [
+        ["Enam", "Enem"],
+        ["Tujuh", "Pitu"],
+        ["Delapan", "Wolu"],
+        ["Sembilan", "Sanga"],
+        ["Sepuluh", "Sedasa"],
+      ]),
     ],
   },
   {
@@ -127,20 +128,18 @@ export const CURRICULUM: Unit[] = [
     description: "Waktu dan hari",
     icon: "🕐",
     lessons: [
-      {
-        id: "wektu-dinten",
-        title: "Waktu & Hari",
-        vocab: vocab("wektu-dinten", [
-          ["Hari ini", "Dinten menika"],
-          ["Besok", "Mbenjing"],
-          ["Kemarin", "Kala wingi"],
-          ["Sekarang", "Samenika"],
-          ["Pagi", "Enjing"],
-          ["Siang", "Siang"],
-          ["Sore", "Sonten"],
-          ["Malam", "Dalu"],
-        ]),
-      },
+      lesson("wektu-dinten", 1, "Bagian 1", [
+        ["Hari ini", "Dinten menika"],
+        ["Besok", "Mbenjing"],
+        ["Kemarin", "Kala wingi"],
+        ["Sekarang", "Samenika"],
+      ]),
+      lesson("wektu-dinten", 2, "Bagian 2", [
+        ["Pagi", "Enjing"],
+        ["Siang", "Siang"],
+        ["Sore", "Sonten"],
+        ["Malam", "Dalu"],
+      ]),
     ],
   },
   {
@@ -149,22 +148,20 @@ export const CURRICULUM: Unit[] = [
     description: "Kata kerja sehari-hari",
     icon: "🏃",
     lessons: [
-      {
-        id: "kriya-padinan",
-        title: "Kata Kerja Sehari-hari",
-        vocab: vocab("kriya-padinan", [
-          ["Makan", "Dhahar"],
-          ["Tidur", "Tilem"],
-          ["Pergi", "Tindak"],
-          ["Datang", "Rawuh"],
-          ["Minum", "Ngunjuk"],
-          ["Melihat", "Mirsani"],
-          ["Berbicara", "Ngendika"],
-          ["Duduk", "Lenggah"],
-          ["Berdiri", "Jumeneng"],
-          ["Mandi", "Siram"],
-        ]),
-      },
+      lesson("kriya-padinan", 1, "Bagian 1", [
+        ["Makan", "Dhahar"],
+        ["Tidur", "Tilem"],
+        ["Pergi", "Tindak"],
+        ["Datang", "Rawuh"],
+        ["Minum", "Ngunjuk"],
+      ]),
+      lesson("kriya-padinan", 2, "Bagian 2", [
+        ["Melihat", "Mirsani"],
+        ["Berbicara", "Ngendika"],
+        ["Duduk", "Lenggah"],
+        ["Berdiri", "Jumeneng"],
+        ["Mandi", "Siram"],
+      ]),
     ],
   },
   {
@@ -173,16 +170,12 @@ export const CURRICULUM: Unit[] = [
     description: "Makanan dan minuman",
     icon: "🍚",
     lessons: [
-      {
-        id: "panganan",
-        title: "Makanan & Minuman",
-        vocab: vocab("panganan", [
-          ["Nasi", "Sekul"],
-          ["Air", "Toya"],
-          ["Minuman", "Unjukan"],
-          ["Makanan", "Dhaharan"],
-        ]),
-      },
+      lesson("panganan", 1, "Makanan & Minuman", [
+        ["Nasi", "Sekul"],
+        ["Air", "Toya"],
+        ["Minuman", "Unjukan"],
+        ["Makanan", "Dhaharan"],
+      ]),
     ],
   },
   {
@@ -191,18 +184,16 @@ export const CURRICULUM: Unit[] = [
     description: "Bagian tubuh (untuk orang yang dihormati)",
     icon: "🖐️",
     lessons: [
-      {
-        id: "perangan-badan",
-        title: "Bagian Tubuh",
-        vocab: vocab("perangan-badan", [
-          ["Kepala", "Mustaka"],
-          ["Mata", "Paningal"],
-          ["Tangan", "Asta"],
-          ["Kaki", "Suku"],
-          ["Wajah", "Pasuryan"],
-          ["Rambut", "Rikma"],
-        ]),
-      },
+      lesson("perangan-badan", 1, "Bagian 1", [
+        ["Kepala", "Mustaka"],
+        ["Mata", "Paningal"],
+        ["Tangan", "Asta"],
+      ]),
+      lesson("perangan-badan", 2, "Bagian 2", [
+        ["Kaki", "Suku"],
+        ["Wajah", "Pasuryan"],
+        ["Rambut", "Rikma"],
+      ]),
     ],
   },
   {
@@ -211,17 +202,15 @@ export const CURRICULUM: Unit[] = [
     description: "Rumah dan barang milik",
     icon: "🏠",
     lessons: [
-      {
-        id: "griya-barang",
-        title: "Rumah & Barang",
-        vocab: vocab("griya-barang", [
-          ["Rumah", "Griya"],
-          ["Rumah (org dihormati)", "Dalem"],
-          ["Tempat tidur", "Pasareyan"],
-          ["Baju", "Rasukan"],
-          ["Uang", "Yatra"],
-        ]),
-      },
+      lesson("griya-barang", 1, "Bagian 1", [
+        ["Rumah", "Griya"],
+        ["Rumah (org dihormati)", "Dalem"],
+        ["Tempat tidur", "Pasareyan"],
+      ]),
+      lesson("griya-barang", 2, "Bagian 2", [
+        ["Baju", "Rasukan"],
+        ["Uang", "Yatra"],
+      ]),
     ],
   },
   {
@@ -230,18 +219,16 @@ export const CURRICULUM: Unit[] = [
     description: "Frasa sopan sehari-hari",
     icon: "🙏",
     lessons: [
-      {
-        id: "tembung-sopan",
-        title: "Frasa Sopan",
-        vocab: vocab("tembung-sopan", [
-          ["Silakan", "Mangga"],
-          ["Tolong", "Nyuwun tulung"],
-          ["Maaf", "Nyuwun pangapunten"],
-          ["Terima kasih banyak", "Matur nuwun sanget"],
-          ["Sama-sama", "Sami-sami"],
-          ["Permisi (lewat)", "Nuwun sewu"],
-        ]),
-      },
+      lesson("tembung-sopan", 1, "Bagian 1", [
+        ["Silakan", "Mangga"],
+        ["Tolong", "Nyuwun tulung"],
+        ["Maaf", "Nyuwun pangapunten"],
+      ]),
+      lesson("tembung-sopan", 2, "Bagian 2", [
+        ["Terima kasih banyak", "Matur nuwun sanget"],
+        ["Sama-sama", "Sami-sami"],
+        ["Permisi (lewat)", "Nuwun sewu"],
+      ]),
     ],
   },
 ];
@@ -250,6 +237,38 @@ export function getUnit(unitId: string): Unit | undefined {
   return CURRICULUM.find((u) => u.id === unitId);
 }
 
-export function getUnitIndex(unitId: string): number {
-  return CURRICULUM.findIndex((u) => u.id === unitId);
+export type LessonContext = {
+  unit: Unit;
+  lesson: Lesson;
+  unitIndex: number;
+  lessonIndexInUnit: number;
+};
+
+export function getLessonContext(lessonId: string): LessonContext | undefined {
+  for (let unitIndex = 0; unitIndex < CURRICULUM.length; unitIndex++) {
+    const unit = CURRICULUM[unitIndex];
+    const lessonIndexInUnit = unit.lessons.findIndex((l) => l.id === lessonId);
+    if (lessonIndexInUnit !== -1) {
+      return { unit, lesson: unit.lessons[lessonIndexInUnit], unitIndex, lessonIndexInUnit };
+    }
+  }
+  return undefined;
+}
+
+export type FlatLesson = {
+  unit: Unit;
+  lesson: Lesson;
+  isFirstInUnit: boolean;
+};
+
+/** All lessons across all units, in path order, for sequential unlock. */
+export function getFlatLessons(): FlatLesson[] {
+  return CURRICULUM.flatMap((unit) =>
+    unit.lessons.map((lesson, i) => ({ unit, lesson, isFirstInUnit: i === 0 })),
+  );
+}
+
+/** All vocab items across the whole curriculum, for review-mode lookups. */
+export function getAllVocab(): VocabItem[] {
+  return CURRICULUM.flatMap((unit) => unit.lessons.flatMap((l) => l.vocab));
 }

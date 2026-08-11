@@ -38,13 +38,33 @@
 - **Correction**: user confirmed "Sanga" should be "Songo" — the a→o vowel harmony shifts **every** "a" in the word, not just the final syllable. Fixed.
 - **Refined rule** (confirmed against "Sanga"→shifts and "Dalu"→stays): the shift only triggers when the word's **final syllable is itself open and ends in "a"**. When that's true, every "a" in the word shifts to "o" (regressive harmony — see Sanga→Songo). If the final syllable ends in a different vowel or is closed by a consonant (e.g. Dalu's "-lu", Bapak's "-pak", Tindak's "-dak"), there's no trigger and "a" stays "a" throughout — matches why those three weren't actually broken by the a/o rule. Use this to judge future words before respelling, rather than guessing per-word.
 
+## Done (deployment)
+- [x] Pushed to GitHub: https://github.com/wahyufa/sinau-jowo (public)
+- [x] Deployed to Vercel (user completed via dashboard import + env vars)
+
+## Done ("richer app" round — lessons, listening, review mode)
+- [x] Each unit split into 2 lessons (except the two smallest, kept at 1) — `lesson()` helper in `lib/curriculum.ts`, e.g. `sapaan-l1`/`sapaan-l2`
+- [x] Routing moved from `/lesson/[unitId]` to `/lesson/[lessonId]`; `getLessonContext()`/`getFlatLessons()` added to `lib/curriculum.ts`
+- [x] `/learn` now renders a flat, sequentially-unlocked lesson path grouped by unit header (not unit-level unlock)
+- [x] Schema migration `supabase/migration-002-lessons-and-review.sql`: `lesson_progress.unit_id` renamed to `lesson_id`; new `word_review` table (RLS'd)
+- [x] New **listening exercise** type (`lib/exercises.ts` `ListenExercise`) — plays krama audio, user picks the Indonesian meaning; mixed in alongside choice exercises
+- [x] **Streak grace day**: skipping exactly one day no longer resets the streak (only 2+ day gaps do) — `lib/actions.ts`
+- [x] **Review mode**: wrong answers upsert into `word_review` (`recordMistake`); `/learn` shows a banner when the queue is non-empty; `/review` runs a choice-only session pulling cross-unit distractors; correct answers call `clearMistake`. Verified end-to-end: banner appears → review session → banner disappears.
+- [x] Extracted `ChoiceExerciseView` into its own file so `LessonRunner` and `ReviewRunner` share it instead of duplicating ~90 lines
+
+## Fixed: critical scoring bug (useMemo misuse)
+Found while testing the new features: **every lesson always showed a 100% score, no matter how many answers were actually wrong.** Root cause — `buildExerciseSet`/`buildReviewExercises`/`MatchExerciseView`'s shuffling all use `Math.random()`, but were wrapped in `useMemo`. React does not guarantee a memo factory runs only once (dev-mode double-invocation is explicitly allowed to catch impure functions like this); when it re-ran, a *freshly reshuffled* options array replaced the old one, so `selected` (a numeric index) ended up pointing at a different option than the one actually clicked — wrong/correct highlighting broke, and completed-exercise counts didn't match reality.
+**Fix**: replaced every `useMemo(() => <fn with Math.random>, deps)` with `useState(() => <fn with Math.random>)` (lazy initializer) in `LessonRunner.tsx` and `ReviewRunner.tsx`. `useState`'s initializer is guaranteed to run exactly once per mount. Also widened exercise `key` props from `key={index}` to `key={\`${attempt}-${index}\`}` so a retry lands on a fresh component instance even when the index coincidentally repeats.
+**Rule for future work**: never wrap a non-deterministic function (`Math.random`, `Date.now`, etc.) in `useMemo` for anything correctness-critical — use `useState(() => ...)` instead. `useMemo` is a performance hint only.
+Verified after the fix: a lesson answered 9/10 correctly now shows exactly 90% (not 100%), confirmed via direct DOM/network inspection across multiple isolated repro runs.
+
 ## Still needs you
 - [ ] **Re-listen to the 7 regenerated words**, especially Ngunjuk/Bapak/Tindak/Putri/"Sugeng siang" — describe *which syllable* sounds wrong and *what it sounds like instead* if still off, so fixes aren't guesswork
 - [ ] Keep QA-ing the rest of the 72 words by ear in the app
 - [ ] Review `lib/curriculum.ts` vocab for accuracy before any public/real users
 - [ ] Re-enable "Confirm email" in Supabase before real users sign up (it's currently off for dev convenience)
+- [ ] Run `supabase/migration-002-lessons-and-review.sql` on the **production** Supabase project too if it wasn't included when you first ran schema.sql there (check: does `lesson_progress` have `lesson_id` or still `unit_id`?)
+- [ ] Redeploy to Vercel to pick up all of today's changes (lesson splitting, listening exercises, review mode, the scoring bug fix)
 
 ## Next up (not started)
-- [ ] Deploy to Vercel
-- [ ] More than 1 lesson per unit (data model already supports it)
 - [ ] Password reset flow

@@ -301,6 +301,35 @@ a {
   font-size: 0.9rem;
 }
 
+.review-banner {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  margin-top: 1.5rem;
+  padding: 0.9rem 1.1rem;
+  border-radius: var(--radius-lg);
+  border: 1px solid var(--color-accent);
+  background: color-mix(in srgb, var(--color-accent) 12%, var(--color-surface));
+  text-decoration: none;
+  color: var(--color-text);
+}
+
+.review-banner-icon {
+  font-size: 1.4rem;
+}
+
+.review-banner-label {
+  font-weight: 700;
+  flex: 1;
+}
+
+.review-banner-cta {
+  color: var(--color-accent);
+  font-weight: 700;
+  font-size: 0.9rem;
+  white-space: nowrap;
+}
+
 .unit-path {
   list-style: none;
   margin: 2rem 0 0;
@@ -363,6 +392,47 @@ a {
   color: var(--color-success);
   font-weight: 900;
   font-size: 1.3rem;
+}
+
+.unit-group-header {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  margin: 1.75rem 0 0.75rem;
+}
+
+li:first-child .unit-group-header {
+  margin-top: 0;
+}
+
+.unit-group-header .unit-title {
+  font-weight: 700;
+  display: block;
+}
+
+.unit-group-header .unit-desc {
+  color: var(--color-text-muted);
+  font-size: 0.85rem;
+  display: block;
+}
+
+.lesson-node {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  margin-left: 2.5rem;
+  margin-bottom: 0.6rem;
+  padding: 0.85rem 1.1rem;
+  border-radius: var(--radius-md);
+  border: 1px solid var(--color-border);
+  background: var(--color-surface);
+  text-decoration: none;
+  color: var(--color-text);
+  box-shadow: var(--shadow-soft);
+}
+
+.lesson-node-title {
+  font-weight: 600;
 }
 
 /* Lesson runner */
@@ -453,6 +523,22 @@ a {
   background: var(--color-surface);
   font-size: 1.1rem;
   flex-shrink: 0;
+}
+
+.listen-play-button {
+  align-self: center;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 5rem;
+  height: 5rem;
+  border-radius: 999px;
+  border: none;
+  background: var(--color-primary);
+  color: var(--color-primary-contrast);
+  font-size: 2rem;
+  box-shadow: 0 3px 0 var(--color-primary-dark);
+  margin: 0.5rem 0 1rem;
 }
 
 .choice-grid {

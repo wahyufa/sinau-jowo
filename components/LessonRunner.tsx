@@ -1,30 +1,37 @@
 "use client";
 
-import { useMemo, useState, useTransition } from "react";
+import { useEffect, useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
-import type { Unit } from "@/lib/curriculum";
+import type { Unit, Lesson } from "@/lib/curriculum";
 import {
   buildExerciseSet,
   shuffle,
-  type ChoiceExercise,
+  type ListenExercise,
   type MatchExercise,
 } from "@/lib/exercises";
-import { completeLesson } from "@/lib/actions";
+import { completeLesson, recordMistake } from "@/lib/actions";
 import { playCorrect, playWrong, playComplete, playFail } from "@/lib/sound";
 import { useUiLang } from "@/lib/i18n";
 import { speak } from "@/lib/speech";
+import ChoiceExerciseView from "@/components/ChoiceExerciseView";
 
 const START_HEARTS = 5;
 type Phase = "study" | "playing" | "summary" | "failed";
 
-export default function LessonRunner({ unit }: { unit: Unit }) {
-  const lesson = unit.lessons[0];
+export default function LessonRunner({ unit, lesson }: { unit: Unit; lesson: Lesson }) {
   const router = useRouter();
 
+  // `attempt` only differentiates the `key` prop across retries (so exercise
+  // views remount even when index coincidentally repeats); it no longer
+  // drives recomputation directly.
   const [attempt, setAttempt] = useState(0);
-  // eslint-disable-next-line react-hooks/exhaustive-deps -- `attempt` is a deliberate cache-buster to reshuffle on retry
-  const exercises = useMemo(() => buildExerciseSet(lesson), [lesson, attempt]);
-  const choiceTotal = exercises.filter((e) => e.type === "choice").length;
+  // Lazy useState initializer, NOT useMemo: buildExerciseSet uses
+  // Math.random, and useMemo isn't guaranteed to run its factory only once
+  // (React may re-invoke it, e.g. under StrictMode) -- that produced a real
+  // bug where `selected` (an index into `options`) pointed at a different
+  // option after a reshuffle. useState's initializer is guaranteed once.
+  const [exercises, setExercises] = useState(() => buildExerciseSet(lesson));
+  const scoreableTotal = exercises.filter((e) => e.type !== "match").length;
 
   const [index, setIndex] = useState(0);
   const [hearts, setHearts] = useState(START_HEARTS);
@@ -45,17 +52,18 @@ export default function LessonRunner({ unit }: { unit: Unit }) {
 
   function finishLesson() {
     const scorePct =
-      choiceTotal === 0 ? 100 : Math.round((correctCount / choiceTotal) * 100);
+      scoreableTotal === 0 ? 100 : Math.round((correctCount / scoreableTotal) * 100);
     const xpEarned = 10 + (scorePct === 100 ? 5 : 0);
     setPhase("summary");
     playComplete();
     startSaving(async () => {
-      await completeLesson(unit.id, scorePct, xpEarned);
+      await completeLesson(lesson.id, scorePct, xpEarned);
       setSaved(true);
     });
   }
 
-  function handleWrongChoice() {
+  function handleWrongChoice(vocabId: string) {
+    void recordMistake(vocabId, unit.id);
     setHearts((h) => {
       const next = h - 1;
       if (next <= 0) {
@@ -68,6 +76,7 @@ export default function LessonRunner({ unit }: { unit: Unit }) {
 
   function retry() {
     setAttempt((a) => a + 1);
+    setExercises(buildExerciseSet(lesson));
     setIndex(0);
     setHearts(START_HEARTS);
     setCorrectCount(0);
@@ -81,6 +90,7 @@ export default function LessonRunner({ unit }: { unit: Unit }) {
     return (
       <StudyScreen
         unit={unit}
+        lesson={lesson}
         onStart={() => setPhase("playing")}
         onExit={exitToMap}
       />
@@ -93,7 +103,7 @@ export default function LessonRunner({ unit }: { unit: Unit }) {
 
   if (phase === "summary") {
     const scorePct =
-      choiceTotal === 0 ? 100 : Math.round((correctCount / choiceTotal) * 100);
+      scoreableTotal === 0 ? 100 : Math.round((correctCount / scoreableTotal) * 100);
     const xpEarned = 10 + (scorePct === 100 ? 5 : 0);
     return (
       <SummaryScreen
@@ -108,16 +118,26 @@ export default function LessonRunner({ unit }: { unit: Unit }) {
   return (
     <div className="lesson-page">
       <LessonHeader
-        unitTitle={unit.title}
+        unitTitle={`${unit.title} · ${lesson.title}`}
         hearts={hearts}
         progress={index / exercises.length}
         onExit={exitToMap}
       />
-      {current.type === "match" ? (
-        <MatchExerciseView key={index} exercise={current} onComplete={goNext} />
-      ) : (
+      {current.type === "match" && (
+        <MatchExerciseView key={`${attempt}-${index}`} exercise={current} onComplete={goNext} />
+      )}
+      {current.type === "choice" && (
         <ChoiceExerciseView
-          key={index}
+          key={`${attempt}-${index}`}
+          exercise={current}
+          onCorrect={() => setCorrectCount((c) => c + 1)}
+          onWrong={handleWrongChoice}
+          onNext={goNext}
+        />
+      )}
+      {current.type === "listen" && (
+        <ListenExerciseView
+          key={`${attempt}-${index}`}
           exercise={current}
           onCorrect={() => setCorrectCount((c) => c + 1)}
           onWrong={handleWrongChoice}
@@ -130,15 +150,17 @@ export default function LessonRunner({ unit }: { unit: Unit }) {
 
 function StudyScreen({
   unit,
+  lesson,
   onStart,
   onExit,
 }: {
   unit: Unit;
+  lesson: Lesson;
   onStart: () => void;
   onExit: () => void;
 }) {
   const { t } = useUiLang();
-  const vocab = unit.lessons[0].vocab;
+  const vocab = lesson.vocab;
 
   return (
     <div className="study-page">
@@ -146,7 +168,7 @@ function StudyScreen({
         <button className="lesson-exit" onClick={onExit} aria-label="Keluar">
           ✕
         </button>
-        <span className="lesson-unit-title">{unit.title}</span>
+        <span className="lesson-unit-title">{unit.title} · {lesson.title}</span>
       </div>
       <div className="study-intro">
         <h2>{t("studyTitle")}</h2>
@@ -206,23 +228,26 @@ function LessonHeader({
   );
 }
 
-function ChoiceExerciseView({
+function ListenExerciseView({
   exercise,
   onCorrect,
   onWrong,
   onNext,
 }: {
-  exercise: ChoiceExercise;
+  exercise: ListenExercise;
   onCorrect: () => void;
-  onWrong: () => void;
+  onWrong: (vocabId: string) => void;
   onNext: () => void;
 }) {
   const { t } = useUiLang();
   const [selected, setSelected] = useState<number | null>(null);
   const [attempted, setAttempted] = useState(false);
   const [isCorrect, setIsCorrect] = useState<boolean | null>(null);
-  const promptIsJavanese = exercise.direction === "jv-to-id";
-  const optionsAreJavanese = exercise.direction === "id-to-jv";
+
+  useEffect(() => {
+    speak(exercise.audioText);
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- play once when this exercise mounts
+  }, []);
 
   function choose(i: number) {
     if (isCorrect === true) return;
@@ -234,28 +259,21 @@ function ChoiceExerciseView({
     if (!attempted) {
       setAttempted(true);
       if (correct) onCorrect();
-      else onWrong();
+      else onWrong(exercise.vocabId);
     }
   }
 
   return (
     <div className="exercise">
-      <p className="exercise-instruction">
-        {t(exercise.direction === "id-to-jv" ? "exerciseInstructionIdToJv" : "exerciseInstructionJvToId")}
-      </p>
-      <div className="exercise-prompt-row">
-        <p className="exercise-prompt">{exercise.prompt}</p>
-        {promptIsJavanese && (
-          <button
-            type="button"
-            className="prompt-speak"
-            onClick={() => speak(exercise.prompt)}
-            aria-label={`Dengarkan ${exercise.prompt}`}
-          >
-            🔊
-          </button>
-        )}
-      </div>
+      <p className="exercise-instruction">{t("exerciseInstructionListen")}</p>
+      <button
+        type="button"
+        className="listen-play-button"
+        onClick={() => speak(exercise.audioText)}
+        aria-label="Putar lagi"
+      >
+        🔊
+      </button>
       <div className="choice-grid">
         {exercise.options.map((opt, i) => {
           let variant = "default";
@@ -263,25 +281,14 @@ function ChoiceExerciseView({
           else if (isCorrect !== null && i === exercise.correctIndex) variant = "correct";
 
           return (
-            <div key={opt} className="choice-row">
-              <button
-                className={`choice-option choice-${variant}`}
-                onClick={() => choose(i)}
-                disabled={isCorrect === true}
-              >
-                {opt}
-              </button>
-              {optionsAreJavanese && (
-                <button
-                  type="button"
-                  className="choice-speak"
-                  onClick={() => speak(opt)}
-                  aria-label={`Dengarkan ${opt}`}
-                >
-                  🔊
-                </button>
-              )}
-            </div>
+            <button
+              key={opt}
+              className={`choice-option choice-${variant}`}
+              onClick={() => choose(i)}
+              disabled={isCorrect === true}
+            >
+              {opt}
+            </button>
           );
         })}
       </div>
@@ -309,13 +316,14 @@ function MatchExerciseView({
   onComplete: () => void;
 }) {
   const { t } = useUiLang();
-  const leftItems = useMemo(
-    () => shuffle(exercise.pairs.map((p) => ({ id: p.id, label: p.indonesian }))),
-    [exercise],
+  // Lazy useState initializer (see note in LessonRunner) -- shuffle() is
+  // non-deterministic, so this must only run once per mount, not on every
+  // render useMemo happens to re-invoke.
+  const [leftItems] = useState(() =>
+    shuffle(exercise.pairs.map((p) => ({ id: p.id, label: p.indonesian }))),
   );
-  const rightItems = useMemo(
-    () => shuffle(exercise.pairs.map((p) => ({ id: p.id, label: p.krama }))),
-    [exercise],
+  const [rightItems] = useState(() =>
+    shuffle(exercise.pairs.map((p) => ({ id: p.id, label: p.krama }))),
   );
 
   const [selectedLeft, setSelectedLeft] = useState<string | null>(null);

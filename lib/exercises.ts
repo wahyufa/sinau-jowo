@@ -6,6 +6,7 @@ export type ChoiceExercise = {
   prompt: string;
   options: string[];
   correctIndex: number;
+  vocabId: string;
 };
 
 export type MatchExercise = {
@@ -13,7 +14,15 @@ export type MatchExercise = {
   pairs: { id: string; indonesian: string; krama: string }[];
 };
 
-export type Exercise = ChoiceExercise | MatchExercise;
+export type ListenExercise = {
+  type: "listen";
+  audioText: string;
+  options: string[];
+  correctIndex: number;
+  vocabId: string;
+};
+
+export type Exercise = ChoiceExercise | MatchExercise | ListenExercise;
 
 export function shuffle<T>(items: T[]): T[] {
   const copy = [...items];
@@ -42,6 +51,20 @@ function buildChoiceExercise(
     prompt: direction === "id-to-jv" ? target.indonesian : target.krama,
     options: optionValues,
     correctIndex: optionValues.indexOf(correctAnswer),
+    vocabId: target.id,
+  };
+}
+
+function buildListenExercise(target: VocabItem, pool: VocabItem[]): ListenExercise {
+  const distractors = shuffle(pool.filter((v) => v.id !== target.id)).slice(0, 3);
+  const optionValues = shuffle([target.indonesian, ...distractors.map((d) => d.indonesian)]);
+
+  return {
+    type: "listen",
+    audioText: target.krama,
+    options: optionValues,
+    correctIndex: optionValues.indexOf(target.indonesian),
+    vocabId: target.id,
   };
 }
 
@@ -63,5 +86,18 @@ export function buildExerciseSet(lesson: Lesson): Exercise[] {
     buildChoiceExercise(item, pool, i % 2 === 0 ? "id-to-jv" : "jv-to-id"),
   );
 
-  return [matchExercise, ...choiceExercises];
+  const listenExercises = shuffle(pool).map((item) => buildListenExercise(item, pool));
+
+  return [matchExercise, ...shuffle([...choiceExercises, ...listenExercises])];
+}
+
+/** Choice-only exercise set for review mode, drawn from a user's mistake queue. */
+export function buildReviewExercises(
+  words: VocabItem[],
+  distractorPool: VocabItem[],
+): ChoiceExercise[] {
+  const pool = distractorPool.length >= 4 ? distractorPool : words;
+  return shuffle(words).map((item, i) =>
+    buildChoiceExercise(item, pool, i % 2 === 0 ? "id-to-jv" : "jv-to-id"),
+  );
 }

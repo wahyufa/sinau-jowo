@@ -58,7 +58,7 @@ export async function signOutAction() {
 }
 
 export async function completeLesson(
-  unitId: string,
+  lessonId: string,
   score: number,
   xpEarned: number,
 ) {
@@ -83,8 +83,12 @@ export async function completeLesson(
   if (!lastDate) {
     streak = 1;
   } else if (lastDate !== today) {
-    const yesterday = new Date(Date.now() - 86_400_000).toISOString().slice(0, 10);
-    streak = lastDate === yesterday ? streak + 1 : 1;
+    const msPerDay = 86_400_000;
+    const daysSince = Math.round(
+      (new Date(today).getTime() - new Date(lastDate).getTime()) / msPerDay,
+    );
+    // Grace day: skipping exactly one day doesn't break the streak.
+    streak = daysSince <= 2 ? streak + 1 : 1;
   }
 
   await supabase
@@ -99,13 +103,61 @@ export async function completeLesson(
   await supabase.from("lesson_progress").upsert(
     {
       user_id: user.id,
-      unit_id: unitId,
+      lesson_id: lessonId,
       score,
       xp_earned: xpEarned,
       completed_at: new Date().toISOString(),
     },
-    { onConflict: "user_id,unit_id" },
+    { onConflict: "user_id,lesson_id" },
   );
 
   revalidatePath("/learn");
+}
+
+export async function recordMistake(vocabId: string, unitId: string) {
+  const supabase = await createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+
+  if (!user) return;
+
+  const { data: existing } = await supabase
+    .from("word_review")
+    .select("wrong_count")
+    .eq("user_id", user.id)
+    .eq("vocab_id", vocabId)
+    .maybeSingle();
+
+  await supabase.from("word_review").upsert(
+    {
+      user_id: user.id,
+      vocab_id: vocabId,
+      unit_id: unitId,
+      wrong_count: (existing?.wrong_count ?? 0) + 1,
+      cleared_at: null,
+      updated_at: new Date().toISOString(),
+    },
+    { onConflict: "user_id,vocab_id" },
+  );
+
+  revalidatePath("/learn");
+}
+
+export async function clearMistake(vocabId: string) {
+  const supabase = await createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+
+  if (!user) return;
+
+  await supabase
+    .from("word_review")
+    .update({ cleared_at: new Date().toISOString() })
+    .eq("user_id", user.id)
+    .eq("vocab_id", vocabId);
+
+  revalidatePath("/learn");
+  revalidatePath("/review");
 }

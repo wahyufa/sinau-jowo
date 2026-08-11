@@ -28,6 +28,10 @@ const UI_DICTIONARY = {
     id: "Cocokkan kata yang artinya sama:",
     jv: "Jodohke tembung sing padha artine:",
   },
+  exerciseInstructionListen: {
+    id: "Dengarkan, lalu pilih artinya:",
+    jv: "Rungokna, banjur pilih tegese:",
+  },
   feedbackCorrect: { id: "Benar!", jv: "Bener!" },
   feedbackWrong: { id: "Belum tepat, coba lagi.", jv: "Durung pas, coba maneh." },
   continueButton: { id: "Lanjut", jv: "Lanjut" },
