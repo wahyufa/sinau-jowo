@@ -54,6 +54,15 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
             <ThemeToggle />
           </div>
           <main className="app-content">{children}</main>
+          <footer className="app-footer">
+            <a
+              href="https://saweria.co/wahyufa"
+              target="_blank"
+              rel="noopener noreferrer"
+            >
+              Beri Dukungan
+            </a>
+          </footer>
         </UiLangProvider>
       </body>
     </html>

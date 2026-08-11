@@ -74,6 +74,31 @@ body {
   -webkit-overflow-scrolling: touch;
 }
 
+.app-footer {
+  flex-shrink: 0;
+  display: flex;
+  justify-content: center;
+  padding: 0.5rem 0.9rem calc(0.75rem + env(safe-area-inset-bottom));
+  color: var(--color-text-muted);
+  font-size: 0.85rem;
+}
+
+.app-footer a {
+  color: var(--color-primary);
+  font-weight: 700;
+  text-decoration: none;
+}
+
+.app-footer a:hover {
+  text-decoration: underline;
+}
+
+.app-footer a:focus-visible {
+  outline: 2px solid var(--color-primary);
+  outline-offset: 3px;
+  border-radius: 3px;
+}
+
 @keyframes spin {
   to {
     transform: rotate(360deg);
